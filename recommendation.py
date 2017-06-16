@@ -1,8 +1,7 @@
 # coding: utf-8
 
 from User import User
-from random import randint
-
+from numpy.random import randint
 import numpy as np
 from sklearn.cluster import KMeans
 
@@ -72,13 +71,24 @@ class Recommendation:
     def make_recommendation(self, user):
         return "Vous n'avez pas de recommandation pour le moment."
 
+    def find_movie(self,mov_id):
+        for movie in self.movies:
+            if movie.id == mov_id:
+                return movie
+        return None
+    
     # Pose une question à l'utilisateur
     def ask_question(self, user):
-        alea = randint(0,1)
-        if alea==0 :
-            return "Avez vous aimé le film seigneur des anneaux ?"
+        i = randint(0,len(self.movies_list))
+        mov_id = self.movies_list[i]
+        movie = self.find_movie(mov_id)
+        if movie == None :
+            tmp = self.movies[0]
         else :
-            return "Avez vous aimé le film Harry Petter ?"
+            tmp = movie
+        User.set_question(user,tmp.id)
+        return "Avez vous aimé le film "+tmp.title
+   
         
     # Calcule la similarité entre 2 utilisateurs
     @staticmethod
