@@ -69,7 +69,9 @@ class Recommendation:
 
     # Affiche la recommandation pour l'utilisateur
     def make_recommendation(self, user):
-        return "Vous n'avez pas de recommandation pour le moment."
+        list_of_recommandation = compute_all_similarities(user)
+        sort_list = sorted(list_of_recommandation,reverse=false)
+        return sort_list[0]
 
     def find_movie(self,mov_id):
         for movie in self.movies:
@@ -89,12 +91,45 @@ class Recommendation:
         User.set_question(user,tmp.id)
         return "Avez vous aimé le film "+tmp.title
    
-        
+    # Cherche un id_film dans les "bad_ratings" de l'utilisateur donnée en argument et le renvoie
+    def search_in_bad_ratings(user,movie):
+        for movie_u in user.bad_ratings:
+            if movie_u == movie:
+                return (movie_u*-1)
+        return 0
+
+    # Cherche un id_ilm dans les "good_ratings de l'utilisateur donnée en argument et le renvoie
+    def search_in_good_ratings(user,movie):
+        for movie_u in user.good_ratings:
+            if movie_u == movie:
+                return movie_u
+        return 0
+    
     # Calcule la similarité entre 2 utilisateurs
     @staticmethod
     def get_similarity(user_a, user_b):
-        return 0
+        similiraty = 0
+        for movie in user_a.good_ratings:
+            tmp_movie = search_in_good_ratings(user_b,movie)
+            if tmp_movie != 0:
+                similiraty = similiraty + movie*tmp_movie
+            else :
+                tmp_movie = search_in_bad_ratings(user_b,movie)
+                similiraty = similiraty + movie*tmp_movie
+
+        for movie in user_a.bad_ratings:
+            tmp_movie = search_in_good_ratings(user_b,movie)
+            if tmp_movie != 0:
+                similiraty = similiraty + (-1*movie)*tmp_movie
+            else :
+                tmp_movie = search_in_bad_ratings(user_b,movie)
+                similiraty = similiraty + (-1*movie)*tmp_movie
+        return (similiraty/user_a.get_norm())
+        
 
     # Calcule la similarité entre un utilisateur et tous les utilisateurs de tests
     def compute_all_similarities(self, user):
-        return []
+        list_of_similarity = {}
+        for id in self.test_users:
+            list_of_similarity[id] = get_similarity(user,self.test_users[id])
+        return list_of_similarity
