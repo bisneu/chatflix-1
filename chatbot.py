@@ -17,7 +17,13 @@ class Bot(object):
 
         # Si le chatbot doit faire une recommandation ou pas
         if user.should_make_recommendation():
-            return self.recommendation.make_recommendation(user)
+            user_s=self.recommendation.make_recommendation(user)
+            movie_l=self.recommendation.get_movies_from_user(
+                self.recommendation.test_users[user_s])
+            str=""
+            for mov in movie_l:
+                str=str+mov+" "
+            return str
         else:
             intro = ""
             # Si l'utilisateur parle pour la première fois, affiche un message d'intro
@@ -26,3 +32,4 @@ class Bot(object):
 
             message = self.recommendation.ask_question(user)
             return intro + message
+        
