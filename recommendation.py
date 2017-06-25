@@ -71,11 +71,23 @@ class Recommendation:
     def affiche_recommendation_list(self,liste):
         for i in liste:
             print("value: "+str(i[0])+" user : " + str(i[1]))
+
+    #return a list that contains the first five user of the list given in arg
+    def five_first_user(self, list_user):
+        rep_list=[]
+        cpt=0
+        for usr in list_user:
+            if cpt=5:
+                return rep_list
+            else:
+                rep_list.append(usr)
+                cpt=cpt+1
+        return rep_list
     
+            
     # Affiche la recommandation pour l'utilisateur
     def make_recommendation(self, user):
         list_of_recommendation = self.compute_all_similarities(user)
-            
         sort_list= sorted(list_of_recommendation, key=lambda tup: tup[0],reverse=True)
         self.affiche_recommendation_list(sort_list)
         print("The best us er for recommendation "+ str(sort_list[0]))
@@ -116,23 +128,23 @@ class Recommendation:
     # Calcule la similarité entre 2 utilisateurs
     @staticmethod
     def get_similarity(user_a, user_b):
-        similiraty = 0
+        similarity = 0
         for movie in user_a.good_ratings:
             tmp_movie = Recommendation.search_in_good_ratings(user_b,movie)
             if tmp_movie != 0:
-                similiraty = similiraty + movie*tmp_movie
+                similarity = similarity + movie*tmp_movie
             else :
                 tmp_movie = Recommendation.search_in_bad_ratings(user_b,movie)
-                similiraty = similiraty + movie*tmp_movie
+                similarity = similarity + movie*tmp_movie
 
         for movie in user_a.bad_ratings:
             tmp_movie = Recommendation.search_in_good_ratings(user_b,movie)
             if tmp_movie != 0:
-                similiraty = similiraty + (-1*movie)*tmp_movie
+                similarity = similarity + (-1*movie)*tmp_movie
             else :
                 tmp_movie = Recommendation.search_in_bad_ratings(user_b,movie)
-                similarity = similiraty + (-1*movie)*tmp_movie
-                return int(similarity/user_a.get_norm())
+                similarity = similarity + (-1*movie)*tmp_movie
+        return int(similarity/user_a.get_norm())
         
 
     # Calcule la similarité entre un utilisateur et tous les utilisateurs de tests
@@ -140,8 +152,8 @@ class Recommendation:
         list_of_similarity = []
         for id in self.test_users:
             tmp= Recommendation.get_similarity(user,self.test_users[id])
-            if tmp == None:
-                list_of_similarity.append(( 0,id))
-            else :
-                list_of_similarity.append((tmp,id))
+           # if tmp == None:
+           #     list_of_similarity.append(( 0,id))
+            #else :
+            list_of_similarity.append((tmp,id))
         return list_of_similarity
