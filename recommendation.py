@@ -47,6 +47,35 @@ class Recommendation:
                 user.ratings.append(rating)
             self.movies_list.append(rating.movie)
 
+    # Cherche un id_film dans les "bad_ratings" de l'utilisateur donnée en argument et le renvoie
+    def search_in_bad_ratings(user,movie):
+        for movie_u in user.bad_ratings:
+            if movie_u == movie:
+                return (movie_u*-1)
+        return 0
+
+    # Cherche un id_ilm dans les "good_ratings de l'utilisateur donnée en argument et le renvoie
+    def search_in_good_ratings(user,movie):
+        for movie_u in user.good_ratings:
+            if movie_u == movie:
+                return movie_u
+        return 0
+
+    #Cherche un id_ilm dans les "neutral_ratings de l'utilisateur donnée en argument et le renvoie
+    def search_in_neutral_ratings(user,movie):
+        for movie_u in user.neutral_ratings:
+            if movie_u == movie:
+                return movie_u
+        return 0
+
+    #confirme si user à déja vu le film movie
+    def user_already_see_movie(user,movie):
+        if search_in_good_ratings(user,movie)==0:
+            if search_in_bad_ratings==0:
+                if search_in_neutral_ratings==0:
+                    return 1
+        return -1
+
     # Enregistre un utilisateur de test s'il n'existe pas déjà et le retourne
     def register_test_user(self, sender):
         if sender not in self.test_users.keys():
@@ -72,24 +101,52 @@ class Recommendation:
         for i in liste:
             print("value: "+str(i[0])+" user : " + str(i[1]))
 
+    #affiche une liste quelconque
+    def print_liste(self,liste):
+        for i in range(0,len(liste)):
+            print("value of print "+str(liste[i]))
+
     #return a list that contains the first five user of the list given in arg
     def five_first_user(self, list_user):
         rep_list=[]
         cpt=0
         for usr in list_user:
-            if cpt=5:
+            if cpt==5:
                 return rep_list
             else:
-                rep_list.append(usr)
+                rep_list.append(usr[1])
                 cpt=cpt+1
         return rep_list
     
-            
+    #retourne une liste des films aimé par les five_user sans les films déjà vu par user
+    def delete_movie_already_see(self,user,list_users):
+        rep_list=[]
+        for usrs in list_users:
+            movie_list=get_movies_from_user(usrs)
+            for movies in movie_list:
+                if user_already_see_movie(user,movies)==1:
+                    rep_list.append(movies)
+        return sorted(rep_list)
+
+    #retourne une liste de film à recommandé
+    def recommended_movie(self,user,list_movie):
+        last_movie=None
+        pred_movie=None
+        rep_list=[]
+        for movie in list_movie:
+            if movie==pred_movie and movie != last_movie:
+                rep_list.append(movie)
+                last_movie=movie
+            pred_movie=movie
+        return rep_list
+                
     # Affiche la recommandation pour l'utilisateur
     def make_recommendation(self, user):
         list_of_recommendation = self.compute_all_similarities(user)
         sort_list= sorted(list_of_recommendation, key=lambda tup: tup[0],reverse=True)
-        self.affiche_recommendation_list(sort_list)
+        five_user= self.five_first_user(sort_list)
+        self.print_liste(five_user)
+        #self.affiche_recommendation_list(sort_list)
         print("The best us er for recommendation "+ str(sort_list[0]))
         return sort_list[0][1]
 
@@ -111,19 +168,7 @@ class Recommendation:
         User.set_question(user,tmp.id)
         return "Avez vous aimé le film "+tmp.title
    
-    # Cherche un id_film dans les "bad_ratings" de l'utilisateur donnée en argument et le renvoie
-    def search_in_bad_ratings(user,movie):
-        for movie_u in user.bad_ratings:
-            if movie_u == movie:
-                return (movie_u*-1)
-        return 0
 
-    # Cherche un id_ilm dans les "good_ratings de l'utilisateur donnée en argument et le renvoie
-    def search_in_good_ratings(user,movie):
-        for movie_u in user.good_ratings:
-            if movie_u == movie:
-                return movie_u
-        return 0
     
     # Calcule la similarité entre 2 utilisateurs
     @staticmethod
@@ -152,8 +197,5 @@ class Recommendation:
         list_of_similarity = []
         for id in self.test_users:
             tmp= Recommendation.get_similarity(user,self.test_users[id])
-           # if tmp == None:
-           #     list_of_similarity.append(( 0,id))
-            #else :
             list_of_similarity.append((tmp,id))
         return list_of_similarity
