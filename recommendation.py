@@ -23,7 +23,6 @@ class Recommendation:
         # attribut 'user' avec l'identifiant de l'utilisateur et un attribut 'is_appreciated' pour savoir si oui ou non
         # l'utilisateur aime le film
         self.ratings = load_simplified_ratings()
-
         # Les utilisateurs du fichier 'ratings-popular-simplified.csv' sont stockés dans 'test_users'
         self.test_users = {}
         # Les utilisateurs du chatbot facebook seront stockés dans 'users'
@@ -32,6 +31,27 @@ class Recommendation:
         # Lance le traitement des notations
         self.process_ratings_to_users()
 
+        #crée un tableau contenant les vecteur genre de chaque film
+        self.tab_genre=np.array(self.vect_movie_tab(self.movies))
+
+        #crée une instance KMeans avec un nombre de cluster à 10
+        self.kmeans= KMeans(n_clusters=10)
+        self.kmeans.fit_predict(self.tab_genre)
+        
+    # permet d'avoir le vecteur de genre pour un film
+    def get_vector_of_movie(self,movie):
+        return [movie.unknown,movie.action,movie.adventure,movie.animation, movie.children,
+                movie.comedy,movie.crime,movie.documentary,movie.drama,movie.fantasy,
+                movie.film_noir,movie.horror,movie.musical,movie.mystery,movie.romance,
+                movie.sci_fi,movie.thriller,movie.war,movie.western]
+
+    #permet d'avoir un tableau de vecteur genre 
+    def vect_movie_tab(self,list_movie):
+        tab_genre=[]
+        for movie in list_movie:
+            tab_genre.append(self.get_vector_of_movie(movie))
+        return tab_genre
+        
     # Traite les notations
     # Crée un utilisateur de test pour chaque utilisateur dans le fichier
     # Puis lui attribue ses films aimés et détestés
@@ -69,13 +89,18 @@ class Recommendation:
         return 0
 
     #confirme si user à déja vu le film movie
-    def user_already_see_movie(user,movie):
-        if search_in_good_ratings(user,movie)==0:
-            if search_in_bad_ratings==0:
-                if search_in_neutral_ratings==0:
+    def user_already_see_movie(self,user,movie):
+        if Recommendation.search_in_good_ratings(user,movie)==0:
+            if Recommendation.search_in_bad_ratings(user,movie)==0:
+                if Recommendation.search_in_neutral_ratings(user,movie)==0:
                     return 1
-        return -1
-
+                else:
+                    return -1
+            else :
+                return -1
+        else :
+            return -1
+        
     # Enregistre un utilisateur de test s'il n'existe pas déjà et le retourne
     def register_test_user(self, sender):
         if sender not in self.test_users.keys():
@@ -88,7 +113,7 @@ class Recommendation:
             self.users[sender] = User(sender)
         return self.users[sender]
 
-    # Retourne les films aimés par un utilisateu print("my similarity " + str(tmp))r
+    # Retourne les films aimés par un utilisateu print("my similarity " + str(tmp))
     def get_movies_from_user(self, user):
         movies_list = []
         good_movies = user.good_ratings
@@ -96,6 +121,12 @@ class Recommendation:
             movies_list.append(self.find_movie(movie_number).title)
         return movies_list
 
+    def convert_movie(self, list_movie):
+        movies_list=[]
+        for movie in list_movie:
+            movies_list.append(self.find_movie(movie).title)
+        return movies_list
+    
     #affiche ma liste
     def affiche_recommendation_list(self,liste):
         for i in liste:
@@ -122,11 +153,10 @@ class Recommendation:
     def delete_movie_already_see(self,user,list_users):
         rep_list=[]
         for usrs in list_users:
-            movie_list=get_movies_from_user(usrs)
-            for movies in movie_list:
-                if user_already_see_movie(user,movies)==1:
+            for movies in self.test_users[usrs].good_ratings:
+                if self.user_already_see_movie(user,movies)==1:
                     rep_list.append(movies)
-        return sorted(rep_list)
+        return rep_list
 
     #retourne une liste de film à recommandé
     def recommended_movie(self,user,list_movie):
@@ -145,10 +175,10 @@ class Recommendation:
         list_of_recommendation = self.compute_all_similarities(user)
         sort_list= sorted(list_of_recommendation, key=lambda tup: tup[0],reverse=True)
         five_user= self.five_first_user(sort_list)
-        self.print_liste(five_user)
-        #self.affiche_recommendation_list(sort_list)
-        print("The best us er for recommendation "+ str(sort_list[0]))
-        return sort_list[0][1]
+        movie_selected=self.delete_movie_already_see(user,five_user)
+        movie_recommended=self.recommended_movie(user,sorted(self.convert_movie(movie_selected)))
+        self.print_liste(movie_recommended)
+        return movie_recommended
 
     def find_movie(self,mov_id):
         for movie in self.movies:
@@ -166,7 +196,7 @@ class Recommendation:
         else :
             tmp = movie
         User.set_question(user,tmp.id)
-        return "Avez vous aimé le film "+tmp.title
+        return "Donnez une note sur 5  du film "+tmp.title
    
 
     

@@ -17,9 +17,7 @@ class Bot(object):
 
         # Si le chatbot doit faire une recommandation ou pas
         if user.should_make_recommendation():
-            user_s=self.recommendation.make_recommendation(user)
-            movie_l=self.recommendation.get_movies_from_user(
-                self.recommendation.test_users[user_s])
+            movie_l=self.recommendation.make_recommendation(user)
             str=""
             for mov in movie_l:
                 str=str+mov+" "

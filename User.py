@@ -15,6 +15,11 @@ class User:
     def has_been_asked_a_question(self):
         return self.latest_movie_asked is not None
 
+    # Si l'utilisateur répond avec une note
+    def answer(self,rate):
+        self.ratings[self.latest_movie_asked]=rate
+        self.questions_before_recommendation -= 1
+        
     # Si l'utilisateur a répondu oui
     def answer_yes(self):
         self.good_ratings.append(self.latest_movie_asked)
@@ -50,10 +55,8 @@ class User:
         # On enlève les espaces en trop et on met tout le message en miniscule
         clean_message = message.lower().strip()
         print(clean_message)
-        if clean_message == "oui" :
-            self.answer_yes()
-        elif clean_message == "non"  :
-            self.answer_no()
+        if (clean_message == "0") or (clean_message == "1") or (clean_message == "2")or (clean_message == "3") or (clean_message == "4") or (clean_message == "5") :
+            answer(clean_message)
         # Il faut traiter ici le message
         else :
             self.answer_neutral()
